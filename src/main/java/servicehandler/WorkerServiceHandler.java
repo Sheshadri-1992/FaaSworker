@@ -1,14 +1,17 @@
 package servicehandler;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.thrift.TException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import dataservices.GetRequest;
 import dataservices.PutRequest;
 import docker.ContainerManagement;
 import thriftservices.Argument;
+import thriftservices.GetBlockResponse;
 import thriftservices.InvokeFunctionResponse;
 import thriftservices.Location;
 import thriftservices.PutBlockResponse;
@@ -53,6 +56,18 @@ public class WorkerServiceHandler implements WorkerService.Iface {
 		response.setResponse("Function " + functionName + " succesffully invoked");
 
 		return response;
+	}
+
+	@Override
+	public GetBlockResponse getBlock(String filename, Location dataLocation) throws TException {
+		// TODO Auto-generated method stub
+		GetBlockResponse getBlkResponse = new GetBlockResponse();
+		GetRequest getReqObj = new GetRequest();
+		ArrayList<Argument> paramList = getReqObj.getParameters(filename, dataLocation);
+		getBlkResponse.setParamList(paramList);
+		getBlkResponse.setResponse("File read successfully");
+		
+		return getBlkResponse;
 	}
 
 }
