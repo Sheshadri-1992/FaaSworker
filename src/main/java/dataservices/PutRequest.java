@@ -5,7 +5,7 @@ import java.io.IOException;
 import java.util.List;
 
 import org.json.JSONException;
-import org.json.JSONObject;
+import org.json.simple.JSONObject;
 
 import miscellaneous.Constants;
 import thriftservices.Argument;
@@ -31,10 +31,10 @@ public class PutRequest {
 			for (Argument arg : parameterArray) {
 				String paramName = arg.getArgName();
 				byte[] paramValue = arg.getArgPayload();
-
-				myJSONObject.put(paramName, paramValue);
+				String encodedString = java.util.Base64.getEncoder().encodeToString(paramValue);
+				myJSONObject.put(paramName, encodedString);
 			}
-		} catch (JSONException e) {
+		} catch (Exception e) {
 			e.printStackTrace();
 		}
 

@@ -1,8 +1,15 @@
 package docker;
 
 import java.io.BufferedReader;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.StringWriter;
+
+import javax.script.ScriptContext;
+import javax.script.ScriptEngine;
+import javax.script.ScriptEngineManager;
+import javax.script.SimpleScriptContext;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,38 +42,56 @@ public class ContainerManagement {
 	public void updateContainerAndStart(String functionName, Specification specs, Location paramLocation,
 			String paramFileName) {
 
-		try {
+		Runnable containerRunnable = new Runnable() {
 			
-			LOGGER.info("Setting docker with the following configuration ");
-			dockerClient.updateContainerCmd("2d7cf8bc4b05").withCpuQuota((int)specs.getVCPUs());
+			@Override
+			public void run() {
+				// TODO Auto-generated method stub
+				startAppropriateContainer(functionName, specs, paramLocation, paramFileName);		
+			}
+		};
+		Thread myThread = new Thread(containerRunnable);
+		myThread.start();
+		
+	}
 
-			Process p = Runtime.getRuntime().exec("python call_container.py");
+	private void startAppropriateContainer(String functionName, Specification specs, Location paramLocation,
+			String paramFileName) {
+		try {
+
+			String command = "/usr/bin/python " + functionName + "_function.py " + (int)specs.getVCPUs() + " " + (int)specs.getRAM() + " "
+					+ paramLocation.getIP() + " " + paramLocation.getPort() + " " + paramFileName;
+			LOGGER.info("The command is "+command);
+
+			Process p = Runtime.getRuntime().exec(command);
 			try {
 				p.waitFor();
 			} catch (InterruptedException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 
-			BufferedReader stdInput = new BufferedReader(new InputStreamReader(p.getInputStream()));			
+//			BufferedReader stdInput = new BufferedReader(new InputStreamReader(p.getInputStream()));
+//			LOGGER.info("Here is the standard output of the command:\n");
+//			String s;
+//			while ((s = stdInput.readLine()) != null) {
+//				System.out.println(s);
+//			}
 
-			// read the output from the command
-			LOGGER.info("Here is the standard output of the command:\n");
-			String s;
-			while ((s = stdInput.readLine()) != null) {
-				System.out.println(s);
-			}
-						
 		} catch (IOException e) {
 			System.out.println("exception happened - here's what I know: ");
 			e.printStackTrace();
 			System.exit(-1);
 		}
+
+	}
+	
+	private void startContainer() {
+		
 	}
 	
 
 	public void stopContainer() {
-
+//		ProcessBuilder pb = new 
 	}
 
 }
