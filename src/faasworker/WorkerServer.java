@@ -9,6 +9,9 @@ import org.apache.thrift.transport.TNonblockingServerTransport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import client.RegisterWorkerToMaster;
+import masterthriftservices.RegisterWorkerRequest;
+import masterthriftservices.WorkerNodeLocation;
 import miscellaneous.Constants;
 import model.WorkerInfo;
 import servicehandler.WorkerServiceHandler;
@@ -32,27 +35,35 @@ public class WorkerServer {
 			// If you require it to make the entire directory path including parents,
 			// use directory.mkdirs(); here instead.
 		}
-	}	
+	}
 
 	public static void main(String[] args) {
 
 		String workerIP = "";
 		Integer workerPort = 8000;
 
-		if (args.length != 2) {
+		if (args.length != 4) {
 			LOGGER.info(
-					"Usage: java -cp target/faasworker-0.0.1-SNAPSHOT-jar-with-dependencies.jar faasworker.WorkerServer <IP> <Port>");
+					"Usage: java -cp target/faasworker-0.0.1-SNAPSHOT-jar-with-dependencies.jar faasworker.WorkerServer <IP> <Port> <worker_id> <worker_type>");
 			System.exit(0);
 		}
 
 		workerIP = args[0];
 		workerPort = Integer.valueOf(args[1]);
-		workerInfo = new WorkerInfo(workerIP, workerPort);
+		workerInfo = new WorkerInfo(workerIP, workerPort, Integer.getInteger(args[2]), args[3]);		
 
-		// TODO Auto-generated method stub
 		LOGGER.info("Starting Worker Server IP " + workerIP + " Port " + workerPort);
-
 		createEdgeCacheDirectory();
+		
+		WorkerNodeLocation nodeLoc = new WorkerNodeLocation();
+		nodeLoc.setIp(workerIP);
+		nodeLoc.setPort(workerPort);
+		RegisterWorkerRequest registerReqObj = new RegisterWorkerRequest();
+		registerReqObj.setWorkerNodeLoc(nodeLoc);
+		registerReqObj.setResourceType(workerInfo.getResourceType()); // Workery type is added here 
+		registerReqObj.setNodeId(workerInfo.getID());
+		RegisterWorkerToMaster.registerMyWorker(registerReqObj);
+
 
 		workerServiceHandler = new WorkerServiceHandler();
 		eventProcessor = new WorkerService.Processor<WorkerServiceHandler>(workerServiceHandler);
@@ -87,14 +98,14 @@ public class WorkerServer {
 			serverArgs.executorService(Executors.newFixedThreadPool(1));
 			serverArgs.processor(eventProcessor);
 			TThreadedSelectorServer server = new TThreadedSelectorServer(serverArgs);
-			LOGGER.info("Starting the Master Server.. ");
+			LOGGER.info("Starting the Worker Server.. ");
 			server.serve();
 			LOGGER.info("Closed the connection Thrift Server");
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 	}
-	
+
 	public static WorkerInfo getWorkerLocation() {
 		return workerInfo;
 	}

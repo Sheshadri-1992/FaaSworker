@@ -34,8 +34,14 @@ struct GetBlockResponse {
 	2: optional string response;
 }
 
+struct WriteResultResponse {
+	1: required i32 status;
+	2: optional string response;
+}
+
 service WorkerService {
 	PutBlockResponse putBlock(1: string event_function_id, 2: list<Argument> parameterArray);
 	InvokeFunctionResponse invokeFunction(1: string functionName, 2: Specification specs, 3: Location paramLocation, 4: string paramFileName);
 	GetBlockResponse getBlock(1: string filename, 2: Location dataLocation);
+	WriteResultResponse writeResultsToMaster(1: list<Argument> resultSet, 2: string functionName, 3: string eventID);
 }

@@ -4,12 +4,23 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.thrift.TException;
+import org.apache.thrift.protocol.TBinaryProtocol;
+import org.apache.thrift.protocol.TProtocol;
+import org.apache.thrift.transport.TFramedTransport;
+import org.apache.thrift.transport.TSocket;
+import org.apache.thrift.transport.TTransport;
+import org.apache.thrift.transport.TTransportException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import dataservices.GetRequest;
 import dataservices.PutRequest;
 import docker.ContainerManagement;
+import masterthriftservices.ExecRequestResponse;
+import masterthriftservices.FaaSMasterService;
+import masterthriftservices.Result;
+import masterthriftservices.WriteResultsResponse;
+import miscellaneous.Constants;
 import thriftservices.Argument;
 import thriftservices.GetBlockResponse;
 import thriftservices.InvokeFunctionResponse;
@@ -17,6 +28,7 @@ import thriftservices.Location;
 import thriftservices.PutBlockResponse;
 import thriftservices.Specification;
 import thriftservices.WorkerService;
+import thriftservices.WriteResultResponse;
 
 public class WorkerServiceHandler implements WorkerService.Iface {
 
@@ -68,6 +80,48 @@ public class WorkerServiceHandler implements WorkerService.Iface {
 		getBlkResponse.setResponse("File read successfully");
 		
 		return getBlkResponse;
+	}
+
+	@Override
+	public WriteResultResponse writeResultsToMaster(List<Argument> resultSet, String functionName, String eventID) throws TException {
+		
+		WriteResultResponse resObj = new WriteResultResponse();
+		resObj.setStatus(1);
+		resObj.setResponse("Write results to master called ");
+		
+		TTransport transport = new TFramedTransport(new TSocket(Constants.MASTER_IP, Constants.MASTER_PORT));
+		try {
+			transport.open();
+		} catch (TTransportException e) {
+			transport.close();
+			LOGGER.error("Error opening connection to Master IP : {} and port : {}", Constants.MASTER_IP,
+					Constants.MASTER_PORT);
+			e.printStackTrace();
+		}
+
+		TProtocol protocol = new TBinaryProtocol(transport);
+		FaaSMasterService.Client masterClient = new FaaSMasterService.Client(protocol);
+		
+		ArrayList<Result> myResultSet = new ArrayList<Result>();
+		if(resultSet != null ) {
+			for(Argument argUnit : resultSet) {
+				Result resultUnit = new Result();
+				resultUnit.setResultName(argUnit.getArgName());
+				resultUnit.setResultData(argUnit.getArgPayload());
+				myResultSet.add(resultUnit);
+			}
+		}
+		
+
+		try {
+			WriteResultsResponse response = masterClient.writeFunctionOutput(eventID, myResultSet, functionName);
+			LOGGER.info("The Exec request response "+response.toString());
+		} catch (TException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+		return resObj;
 	}
 
 }

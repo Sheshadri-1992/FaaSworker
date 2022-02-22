@@ -27,6 +27,7 @@ if len(sys.argv) <= 1 or sys.argv[1] == '--help':
     print('  PutBlockResponse putBlock(string event_function_id,  parameterArray)')
     print('  InvokeFunctionResponse invokeFunction(string functionName, Specification specs, Location paramLocation, string paramFileName)')
     print('  GetBlockResponse getBlock(string filename, Location dataLocation)')
+    print('  WriteResultResponse writeResultsToMaster( resultSet, string functionName, string eventID)')
     print('')
     sys.exit(0)
 
@@ -123,6 +124,12 @@ elif cmd == 'getBlock':
         print('getBlock requires 2 args')
         sys.exit(1)
     pp.pprint(client.getBlock(args[0], eval(args[1]),))
+
+elif cmd == 'writeResultsToMaster':
+    if len(args) != 3:
+        print('writeResultsToMaster requires 3 args')
+        sys.exit(1)
+    pp.pprint(client.writeResultsToMaster(eval(args[0]), args[1], args[2],))
 
 else:
     print('Unrecognized method %s' % cmd)
