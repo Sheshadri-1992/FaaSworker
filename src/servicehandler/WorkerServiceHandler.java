@@ -16,6 +16,7 @@ import org.slf4j.LoggerFactory;
 import dataservices.GetRequest;
 import dataservices.PutRequest;
 import docker.ContainerManagement;
+import faasworker.WorkerServer;
 import masterthriftservices.ExecRequestResponse;
 import masterthriftservices.FaaSMasterService;
 import masterthriftservices.Result;
@@ -40,14 +41,18 @@ public class WorkerServiceHandler implements WorkerService.Iface {
 	@Override
 	public PutBlockResponse putBlock(String event_function_id, List<Argument> parameterArray) throws TException {
 		// TODO Auto-generated method stub
+		long start_time = System.currentTimeMillis();
 		LOGGER.info("The worker node is called for putBlock() " + event_function_id);
 		PutRequest objectPutRequest = new PutRequest();
 		objectPutRequest.prepareJSONObject(event_function_id, parameterArray);
 		objectPutRequest.writeJSONLocally();
+		long end_time = System.currentTimeMillis();
+		long put_block_time = end_time - start_time;
 
 		PutBlockResponse response = new PutBlockResponse();
 		response.setStatus(1);
 		response.setResponse("Wrote the parameters on the file " + event_function_id);
+		LOGGER.info("Put block event ID "+event_function_id+" Time taken "+put_block_time);
 
 		return response;
 	}
@@ -78,44 +83,45 @@ public class WorkerServiceHandler implements WorkerService.Iface {
 		ArrayList<Argument> paramList = getReqObj.getParameters(filename, dataLocation);
 		getBlkResponse.setParamList(paramList);
 		getBlkResponse.setResponse("File read successfully");
-		
+
 		return getBlkResponse;
 	}
 
 	@Override
-	public WriteResultResponse writeResultsToMaster(List<Argument> resultSet, String functionName, String eventID) throws TException {
-		
+	public WriteResultResponse writeResultsToMaster(List<Argument> resultSet, String functionName, String eventID)
+			throws TException {
+
 		WriteResultResponse resObj = new WriteResultResponse();
 		resObj.setStatus(1);
 		resObj.setResponse("Write results to master called ");
-		
-		TTransport transport = new TFramedTransport(new TSocket(Constants.MASTER_IP, Constants.MASTER_PORT));
+
+		TTransport transport = new TFramedTransport(
+				new TSocket(WorkerServer.masterInfo.getIP(), WorkerServer.masterInfo.getPort()));
 		try {
 			transport.open();
 		} catch (TTransportException e) {
 			transport.close();
-			LOGGER.error("Error opening connection to Master IP : {} and port : {}", Constants.MASTER_IP,
-					Constants.MASTER_PORT);
+			LOGGER.error("Error opening connection to Master IP : {} and port : {}", WorkerServer.masterInfo.getIP(),
+					WorkerServer.masterInfo.getPort());
 			e.printStackTrace();
 		}
 
 		TProtocol protocol = new TBinaryProtocol(transport);
 		FaaSMasterService.Client masterClient = new FaaSMasterService.Client(protocol);
-		
+
 		ArrayList<Result> myResultSet = new ArrayList<Result>();
-		if(resultSet != null ) {
-			for(Argument argUnit : resultSet) {
+		if (resultSet != null) {
+			for (Argument argUnit : resultSet) {
 				Result resultUnit = new Result();
 				resultUnit.setResultName(argUnit.getArgName());
 				resultUnit.setResultData(argUnit.getArgPayload());
 				myResultSet.add(resultUnit);
 			}
 		}
-		
 
 		try {
 			WriteResultsResponse response = masterClient.writeFunctionOutput(eventID, myResultSet, functionName);
-			LOGGER.info("The Exec request response "+response.toString());
+			LOGGER.info("The Exec request response " + response.toString());
 		} catch (TException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

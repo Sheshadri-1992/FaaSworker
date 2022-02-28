@@ -1,15 +1,6 @@
 package docker;
 
-import java.io.BufferedReader;
-import java.io.FileReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.StringWriter;
-
-import javax.script.ScriptContext;
-import javax.script.ScriptEngine;
-import javax.script.ScriptEngineManager;
-import javax.script.SimpleScriptContext;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -51,8 +42,7 @@ public class ContainerManagement {
 			}
 		};
 		Thread myThread = new Thread(containerRunnable);
-		myThread.start();
-		
+		myThread.start();		
 	}
 
 	private void startAppropriateContainer(String functionName, Specification specs, Location paramLocation,
@@ -85,6 +75,7 @@ public class ContainerManagement {
 
 	}
 	
+	@SuppressWarnings("unused")
 	private void startContainer() {
 		
 	}

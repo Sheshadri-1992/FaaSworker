@@ -2,10 +2,19 @@ package model;
 
 public class WorkerInfo {
 	
+	@Override
+	public String toString() {
+		return "WorkerInfo [IP=" + IP + ", port=" + port + ", ID=" + ID + ", resourceType=" + resourceType + "]";
+	}
+
 	private String IP;
 	private Integer port;
 	private Integer ID;
 	private String resourceType;
+	
+	public WorkerInfo() {
+		
+	}
 	
 	public WorkerInfo(String argIP, Integer argPort, Integer argID, String argResourceType) {
 		IP = argIP;

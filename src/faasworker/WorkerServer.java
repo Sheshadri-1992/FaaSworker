@@ -1,11 +1,17 @@
 package faasworker;
 
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
 import java.util.concurrent.Executors;
 
 import org.apache.thrift.server.TThreadedSelectorServer;
 import org.apache.thrift.transport.TNonblockingServerSocket;
 import org.apache.thrift.transport.TNonblockingServerTransport;
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -23,6 +29,7 @@ public class WorkerServer {
 	public static WorkerServiceHandler workerServiceHandler = null;
 	public static WorkerService.Processor<WorkerServiceHandler> eventProcessor = null;
 	public static WorkerInfo workerInfo;
+	public static WorkerInfo masterInfo;
 
 	public static void createEdgeCacheDirectory() {
 
@@ -42,28 +49,64 @@ public class WorkerServer {
 		String workerIP = "";
 		Integer workerPort = 8000;
 
-		if (args.length != 4) {
+		if (args.length != 1) {
 			LOGGER.info(
-					"Usage: java -cp target/faasworker-0.0.1-SNAPSHOT-jar-with-dependencies.jar faasworker.WorkerServer <IP> <Port> <worker_id> <worker_type>");
+					"Usage: java -cp target/faasworker-0.0.1-SNAPSHOT-jar-with-dependencies.jar faasworker.WorkerServer config.json");
+			System.exit(0);
+		}
+		File f = new File(args[0]);
+		if (f.exists() == false) {
+			System.out.println("The config file does not exist");
 			System.exit(0);
 		}
 
-		workerIP = args[0];
-		workerPort = Integer.valueOf(args[1]);
-		workerInfo = new WorkerInfo(workerIP, workerPort, Integer.getInteger(args[2]), args[3]);		
+		JSONParser parser = new JSONParser();
+		Object obj;
+		try {
+			obj = parser.parse(new FileReader(args[0]));
+			JSONObject jsonObject = (JSONObject) obj;
+			workerIP = (String) jsonObject.get("worker_ip");
+			String workerPortFromConfig = (String) jsonObject.get("worker_port");
+			workerPort = Integer.valueOf(workerPortFromConfig);
+			String resType = (String) jsonObject.get("res_type");
+			String nodeIDFromConfig = (String) jsonObject.get("nodeid");
+			Integer nodeID = Integer.valueOf(nodeIDFromConfig);
+			workerInfo = new WorkerInfo(workerIP, workerPort, nodeID, resType);
+			
+			String masterIP =  (String) jsonObject.get("master_ip");
+			String masterPortFromConfig = (String) jsonObject.get("master_port");
+			Integer masterPort = Integer.valueOf(masterPortFromConfig);
+			masterInfo = new WorkerInfo();
+			masterInfo.setIP(masterIP);
+			masterInfo.setPort(masterPort);
+			
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (ParseException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+		
+		
+		
+		System.out.println(workerInfo.toString());
 
 		LOGGER.info("Starting Worker Server IP " + workerIP + " Port " + workerPort);
 		createEdgeCacheDirectory();
-		
+
 		WorkerNodeLocation nodeLoc = new WorkerNodeLocation();
 		nodeLoc.setIp(workerIP);
 		nodeLoc.setPort(workerPort);
 		RegisterWorkerRequest registerReqObj = new RegisterWorkerRequest();
 		registerReqObj.setWorkerNodeLoc(nodeLoc);
-		registerReqObj.setResourceType(workerInfo.getResourceType()); // Workery type is added here 
+		registerReqObj.setResourceType(workerInfo.getResourceType()); // Workery type is added here
 		registerReqObj.setNodeId(workerInfo.getID());
 		RegisterWorkerToMaster.registerMyWorker(registerReqObj);
-
 
 		workerServiceHandler = new WorkerServiceHandler();
 		eventProcessor = new WorkerService.Processor<WorkerServiceHandler>(workerServiceHandler);
