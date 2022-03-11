@@ -8,7 +8,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 import org.apache.thrift.TException;
@@ -18,7 +17,6 @@ import org.apache.thrift.transport.TFramedTransport;
 import org.apache.thrift.transport.TSocket;
 import org.apache.thrift.transport.TTransport;
 import org.apache.thrift.transport.TTransportException;
-import org.json.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
@@ -29,6 +27,7 @@ import faasworker.WorkerServer;
 import miscellaneous.Constants;
 import thriftservices.Argument;
 import thriftservices.GetBlockResponse;
+import thriftservices.ImageBinary;
 import thriftservices.Location;
 import thriftservices.WorkerService;
 
@@ -122,6 +121,13 @@ public class GetRequest {
 
 	}
 	
+	public List<ImageBinary> readImageBinaryList(String directoryName, Location dataLocation){
+		String localIP = WorkerServer.getWorkerLocation().getIP();
+		Integer localPort = WorkerServer.getWorkerLocation().getPort();
+		List<ImageBinary> imageBinaryList = null; 
+				
+		return imageBinaryList;		
+	}
 	
 	/** For testing purposes **/
 	private void testMethod(String[] args) {

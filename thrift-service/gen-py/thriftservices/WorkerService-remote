@@ -27,7 +27,10 @@ if len(sys.argv) <= 1 or sys.argv[1] == '--help':
     print('  PutBlockResponse putBlock(string event_function_id,  parameterArray)')
     print('  InvokeFunctionResponse invokeFunction(string functionName, Specification specs, Location paramLocation, string paramFileName)')
     print('  GetBlockResponse getBlock(string filename, Location dataLocation)')
-    print('  WriteResultResponse writeResultsToMaster( resultSet, string functionName, string eventID)')
+    print('  WriteResultResponse writeResultsToMaster(string functionName, string eventID, string directoryName, i32 dataNodeID)')
+    print('  string writeFileToWorker(string directoryName,  imageBinaryList)')
+    print('  string testmethod(string test)')
+    print('  string testinputsize(string inputsize)')
     print('')
     sys.exit(0)
 
@@ -126,10 +129,28 @@ elif cmd == 'getBlock':
     pp.pprint(client.getBlock(args[0], eval(args[1]),))
 
 elif cmd == 'writeResultsToMaster':
-    if len(args) != 3:
-        print('writeResultsToMaster requires 3 args')
+    if len(args) != 4:
+        print('writeResultsToMaster requires 4 args')
         sys.exit(1)
-    pp.pprint(client.writeResultsToMaster(eval(args[0]), args[1], args[2],))
+    pp.pprint(client.writeResultsToMaster(args[0], args[1], args[2], eval(args[3]),))
+
+elif cmd == 'writeFileToWorker':
+    if len(args) != 2:
+        print('writeFileToWorker requires 2 args')
+        sys.exit(1)
+    pp.pprint(client.writeFileToWorker(args[0], eval(args[1]),))
+
+elif cmd == 'testmethod':
+    if len(args) != 1:
+        print('testmethod requires 1 args')
+        sys.exit(1)
+    pp.pprint(client.testmethod(args[0],))
+
+elif cmd == 'testinputsize':
+    if len(args) != 1:
+        print('testinputsize requires 1 args')
+        sys.exit(1)
+    pp.pprint(client.testinputsize(args[0],))
 
 else:
     print('Unrecognized method %s' % cmd)

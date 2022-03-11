@@ -49,7 +49,7 @@ public class ContainerManagement {
 			String paramFileName) {
 		try {
 
-			String command = "/usr/bin/python " + functionName + "_function.py " + (int)specs.getVCPUs() + " " + (int)specs.getRAM() + " "
+			String command = "/usr/bin/python2.7 " + functionName + "_function.py " + (int)specs.getVCPUs() + " " + (int)specs.getRAM() + " "
 					+ paramLocation.getIP() + " " + paramLocation.getPort() + " " + paramFileName;
 			LOGGER.info("The command is "+command);
 

@@ -45,12 +45,35 @@ class Iface(object):
         """
         pass
 
-    def writeResultsToMaster(self, resultSet, functionName, eventID):
+    def writeResultsToMaster(self, functionName, eventID, directoryName, dataNodeID):
         """
         Parameters:
-         - resultSet
          - functionName
          - eventID
+         - directoryName
+         - dataNodeID
+        """
+        pass
+
+    def writeFileToWorker(self, directoryName, imageBinaryList):
+        """
+        Parameters:
+         - directoryName
+         - imageBinaryList
+        """
+        pass
+
+    def testmethod(self, test):
+        """
+        Parameters:
+         - test
+        """
+        pass
+
+    def testinputsize(self, inputsize):
+        """
+        Parameters:
+         - inputsize
         """
         pass
 
@@ -165,22 +188,24 @@ class Client(Iface):
             return result.success
         raise TApplicationException(TApplicationException.MISSING_RESULT, "getBlock failed: unknown result")
 
-    def writeResultsToMaster(self, resultSet, functionName, eventID):
+    def writeResultsToMaster(self, functionName, eventID, directoryName, dataNodeID):
         """
         Parameters:
-         - resultSet
          - functionName
          - eventID
+         - directoryName
+         - dataNodeID
         """
-        self.send_writeResultsToMaster(resultSet, functionName, eventID)
+        self.send_writeResultsToMaster(functionName, eventID, directoryName, dataNodeID)
         return self.recv_writeResultsToMaster()
 
-    def send_writeResultsToMaster(self, resultSet, functionName, eventID):
+    def send_writeResultsToMaster(self, functionName, eventID, directoryName, dataNodeID):
         self._oprot.writeMessageBegin('writeResultsToMaster', TMessageType.CALL, self._seqid)
         args = writeResultsToMaster_args()
-        args.resultSet = resultSet
         args.functionName = functionName
         args.eventID = eventID
+        args.directoryName = directoryName
+        args.dataNodeID = dataNodeID
         args.write(self._oprot)
         self._oprot.writeMessageEnd()
         self._oprot.trans.flush()
@@ -200,6 +225,101 @@ class Client(Iface):
             return result.success
         raise TApplicationException(TApplicationException.MISSING_RESULT, "writeResultsToMaster failed: unknown result")
 
+    def writeFileToWorker(self, directoryName, imageBinaryList):
+        """
+        Parameters:
+         - directoryName
+         - imageBinaryList
+        """
+        self.send_writeFileToWorker(directoryName, imageBinaryList)
+        return self.recv_writeFileToWorker()
+
+    def send_writeFileToWorker(self, directoryName, imageBinaryList):
+        self._oprot.writeMessageBegin('writeFileToWorker', TMessageType.CALL, self._seqid)
+        args = writeFileToWorker_args()
+        args.directoryName = directoryName
+        args.imageBinaryList = imageBinaryList
+        args.write(self._oprot)
+        self._oprot.writeMessageEnd()
+        self._oprot.trans.flush()
+
+    def recv_writeFileToWorker(self):
+        iprot = self._iprot
+        (fname, mtype, rseqid) = iprot.readMessageBegin()
+        if mtype == TMessageType.EXCEPTION:
+            x = TApplicationException()
+            x.read(iprot)
+            iprot.readMessageEnd()
+            raise x
+        result = writeFileToWorker_result()
+        result.read(iprot)
+        iprot.readMessageEnd()
+        if result.success is not None:
+            return result.success
+        raise TApplicationException(TApplicationException.MISSING_RESULT, "writeFileToWorker failed: unknown result")
+
+    def testmethod(self, test):
+        """
+        Parameters:
+         - test
+        """
+        self.send_testmethod(test)
+        return self.recv_testmethod()
+
+    def send_testmethod(self, test):
+        self._oprot.writeMessageBegin('testmethod', TMessageType.CALL, self._seqid)
+        args = testmethod_args()
+        args.test = test
+        args.write(self._oprot)
+        self._oprot.writeMessageEnd()
+        self._oprot.trans.flush()
+
+    def recv_testmethod(self):
+        iprot = self._iprot
+        (fname, mtype, rseqid) = iprot.readMessageBegin()
+        if mtype == TMessageType.EXCEPTION:
+            x = TApplicationException()
+            x.read(iprot)
+            iprot.readMessageEnd()
+            raise x
+        result = testmethod_result()
+        result.read(iprot)
+        iprot.readMessageEnd()
+        if result.success is not None:
+            return result.success
+        raise TApplicationException(TApplicationException.MISSING_RESULT, "testmethod failed: unknown result")
+
+    def testinputsize(self, inputsize):
+        """
+        Parameters:
+         - inputsize
+        """
+        self.send_testinputsize(inputsize)
+        return self.recv_testinputsize()
+
+    def send_testinputsize(self, inputsize):
+        self._oprot.writeMessageBegin('testinputsize', TMessageType.CALL, self._seqid)
+        args = testinputsize_args()
+        args.inputsize = inputsize
+        args.write(self._oprot)
+        self._oprot.writeMessageEnd()
+        self._oprot.trans.flush()
+
+    def recv_testinputsize(self):
+        iprot = self._iprot
+        (fname, mtype, rseqid) = iprot.readMessageBegin()
+        if mtype == TMessageType.EXCEPTION:
+            x = TApplicationException()
+            x.read(iprot)
+            iprot.readMessageEnd()
+            raise x
+        result = testinputsize_result()
+        result.read(iprot)
+        iprot.readMessageEnd()
+        if result.success is not None:
+            return result.success
+        raise TApplicationException(TApplicationException.MISSING_RESULT, "testinputsize failed: unknown result")
+
 
 class Processor(Iface, TProcessor):
     def __init__(self, handler):
@@ -209,6 +329,9 @@ class Processor(Iface, TProcessor):
         self._processMap["invokeFunction"] = Processor.process_invokeFunction
         self._processMap["getBlock"] = Processor.process_getBlock
         self._processMap["writeResultsToMaster"] = Processor.process_writeResultsToMaster
+        self._processMap["writeFileToWorker"] = Processor.process_writeFileToWorker
+        self._processMap["testmethod"] = Processor.process_testmethod
+        self._processMap["testinputsize"] = Processor.process_testinputsize
 
     def process(self, iprot, oprot):
         (name, type, seqid) = iprot.readMessageBegin()
@@ -300,7 +423,7 @@ class Processor(Iface, TProcessor):
         iprot.readMessageEnd()
         result = writeResultsToMaster_result()
         try:
-            result.success = self._handler.writeResultsToMaster(args.resultSet, args.functionName, args.eventID)
+            result.success = self._handler.writeResultsToMaster(args.functionName, args.eventID, args.directoryName, args.dataNodeID)
             msg_type = TMessageType.REPLY
         except TTransport.TTransportException:
             raise
@@ -313,6 +436,75 @@ class Processor(Iface, TProcessor):
             msg_type = TMessageType.EXCEPTION
             result = TApplicationException(TApplicationException.INTERNAL_ERROR, 'Internal error')
         oprot.writeMessageBegin("writeResultsToMaster", msg_type, seqid)
+        result.write(oprot)
+        oprot.writeMessageEnd()
+        oprot.trans.flush()
+
+    def process_writeFileToWorker(self, seqid, iprot, oprot):
+        args = writeFileToWorker_args()
+        args.read(iprot)
+        iprot.readMessageEnd()
+        result = writeFileToWorker_result()
+        try:
+            result.success = self._handler.writeFileToWorker(args.directoryName, args.imageBinaryList)
+            msg_type = TMessageType.REPLY
+        except TTransport.TTransportException:
+            raise
+        except TApplicationException as ex:
+            logging.exception('TApplication exception in handler')
+            msg_type = TMessageType.EXCEPTION
+            result = ex
+        except Exception:
+            logging.exception('Unexpected exception in handler')
+            msg_type = TMessageType.EXCEPTION
+            result = TApplicationException(TApplicationException.INTERNAL_ERROR, 'Internal error')
+        oprot.writeMessageBegin("writeFileToWorker", msg_type, seqid)
+        result.write(oprot)
+        oprot.writeMessageEnd()
+        oprot.trans.flush()
+
+    def process_testmethod(self, seqid, iprot, oprot):
+        args = testmethod_args()
+        args.read(iprot)
+        iprot.readMessageEnd()
+        result = testmethod_result()
+        try:
+            result.success = self._handler.testmethod(args.test)
+            msg_type = TMessageType.REPLY
+        except TTransport.TTransportException:
+            raise
+        except TApplicationException as ex:
+            logging.exception('TApplication exception in handler')
+            msg_type = TMessageType.EXCEPTION
+            result = ex
+        except Exception:
+            logging.exception('Unexpected exception in handler')
+            msg_type = TMessageType.EXCEPTION
+            result = TApplicationException(TApplicationException.INTERNAL_ERROR, 'Internal error')
+        oprot.writeMessageBegin("testmethod", msg_type, seqid)
+        result.write(oprot)
+        oprot.writeMessageEnd()
+        oprot.trans.flush()
+
+    def process_testinputsize(self, seqid, iprot, oprot):
+        args = testinputsize_args()
+        args.read(iprot)
+        iprot.readMessageEnd()
+        result = testinputsize_result()
+        try:
+            result.success = self._handler.testinputsize(args.inputsize)
+            msg_type = TMessageType.REPLY
+        except TTransport.TTransportException:
+            raise
+        except TApplicationException as ex:
+            logging.exception('TApplication exception in handler')
+            msg_type = TMessageType.EXCEPTION
+            result = ex
+        except Exception:
+            logging.exception('Unexpected exception in handler')
+            msg_type = TMessageType.EXCEPTION
+            result = TApplicationException(TApplicationException.INTERNAL_ERROR, 'Internal error')
+        oprot.writeMessageBegin("testinputsize", msg_type, seqid)
         result.write(oprot)
         oprot.writeMessageEnd()
         oprot.trans.flush()
@@ -761,16 +953,18 @@ getBlock_result.thrift_spec = (
 class writeResultsToMaster_args(object):
     """
     Attributes:
-     - resultSet
      - functionName
      - eventID
+     - directoryName
+     - dataNodeID
     """
 
 
-    def __init__(self, resultSet=None, functionName=None, eventID=None,):
-        self.resultSet = resultSet
+    def __init__(self, functionName=None, eventID=None, directoryName=None, dataNodeID=None,):
         self.functionName = functionName
         self.eventID = eventID
+        self.directoryName = directoryName
+        self.dataNodeID = dataNodeID
 
     def read(self, iprot):
         if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
@@ -782,24 +976,23 @@ class writeResultsToMaster_args(object):
             if ftype == TType.STOP:
                 break
             if fid == 1:
-                if ftype == TType.LIST:
-                    self.resultSet = []
-                    (_etype17, _size14) = iprot.readListBegin()
-                    for _i18 in range(_size14):
-                        _elem19 = Argument()
-                        _elem19.read(iprot)
-                        self.resultSet.append(_elem19)
-                    iprot.readListEnd()
-                else:
-                    iprot.skip(ftype)
-            elif fid == 2:
                 if ftype == TType.STRING:
                     self.functionName = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
                 else:
                     iprot.skip(ftype)
-            elif fid == 3:
+            elif fid == 2:
                 if ftype == TType.STRING:
                     self.eventID = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 3:
+                if ftype == TType.STRING:
+                    self.directoryName = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 4:
+                if ftype == TType.I32:
+                    self.dataNodeID = iprot.readI32()
                 else:
                     iprot.skip(ftype)
             else:
@@ -812,20 +1005,21 @@ class writeResultsToMaster_args(object):
             oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
             return
         oprot.writeStructBegin('writeResultsToMaster_args')
-        if self.resultSet is not None:
-            oprot.writeFieldBegin('resultSet', TType.LIST, 1)
-            oprot.writeListBegin(TType.STRUCT, len(self.resultSet))
-            for iter20 in self.resultSet:
-                iter20.write(oprot)
-            oprot.writeListEnd()
-            oprot.writeFieldEnd()
         if self.functionName is not None:
-            oprot.writeFieldBegin('functionName', TType.STRING, 2)
+            oprot.writeFieldBegin('functionName', TType.STRING, 1)
             oprot.writeString(self.functionName.encode('utf-8') if sys.version_info[0] == 2 else self.functionName)
             oprot.writeFieldEnd()
         if self.eventID is not None:
-            oprot.writeFieldBegin('eventID', TType.STRING, 3)
+            oprot.writeFieldBegin('eventID', TType.STRING, 2)
             oprot.writeString(self.eventID.encode('utf-8') if sys.version_info[0] == 2 else self.eventID)
+            oprot.writeFieldEnd()
+        if self.directoryName is not None:
+            oprot.writeFieldBegin('directoryName', TType.STRING, 3)
+            oprot.writeString(self.directoryName.encode('utf-8') if sys.version_info[0] == 2 else self.directoryName)
+            oprot.writeFieldEnd()
+        if self.dataNodeID is not None:
+            oprot.writeFieldBegin('dataNodeID', TType.I32, 4)
+            oprot.writeI32(self.dataNodeID)
             oprot.writeFieldEnd()
         oprot.writeFieldStop()
         oprot.writeStructEnd()
@@ -846,9 +1040,10 @@ class writeResultsToMaster_args(object):
 all_structs.append(writeResultsToMaster_args)
 writeResultsToMaster_args.thrift_spec = (
     None,  # 0
-    (1, TType.LIST, 'resultSet', (TType.STRUCT, [Argument, None], False), None, ),  # 1
-    (2, TType.STRING, 'functionName', 'UTF8', None, ),  # 2
-    (3, TType.STRING, 'eventID', 'UTF8', None, ),  # 3
+    (1, TType.STRING, 'functionName', 'UTF8', None, ),  # 1
+    (2, TType.STRING, 'eventID', 'UTF8', None, ),  # 2
+    (3, TType.STRING, 'directoryName', 'UTF8', None, ),  # 3
+    (4, TType.I32, 'dataNodeID', None, None, ),  # 4
 )
 
 
@@ -910,6 +1105,390 @@ class writeResultsToMaster_result(object):
 all_structs.append(writeResultsToMaster_result)
 writeResultsToMaster_result.thrift_spec = (
     (0, TType.STRUCT, 'success', [WriteResultResponse, None], None, ),  # 0
+)
+
+
+class writeFileToWorker_args(object):
+    """
+    Attributes:
+     - directoryName
+     - imageBinaryList
+    """
+
+
+    def __init__(self, directoryName=None, imageBinaryList=None,):
+        self.directoryName = directoryName
+        self.imageBinaryList = imageBinaryList
+
+    def read(self, iprot):
+        if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
+            iprot._fast_decode(self, iprot, [self.__class__, self.thrift_spec])
+            return
+        iprot.readStructBegin()
+        while True:
+            (fname, ftype, fid) = iprot.readFieldBegin()
+            if ftype == TType.STOP:
+                break
+            if fid == 1:
+                if ftype == TType.STRING:
+                    self.directoryName = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 2:
+                if ftype == TType.LIST:
+                    self.imageBinaryList = []
+                    (_etype17, _size14) = iprot.readListBegin()
+                    for _i18 in range(_size14):
+                        _elem19 = ImageBinary()
+                        _elem19.read(iprot)
+                        self.imageBinaryList.append(_elem19)
+                    iprot.readListEnd()
+                else:
+                    iprot.skip(ftype)
+            else:
+                iprot.skip(ftype)
+            iprot.readFieldEnd()
+        iprot.readStructEnd()
+
+    def write(self, oprot):
+        if oprot._fast_encode is not None and self.thrift_spec is not None:
+            oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
+            return
+        oprot.writeStructBegin('writeFileToWorker_args')
+        if self.directoryName is not None:
+            oprot.writeFieldBegin('directoryName', TType.STRING, 1)
+            oprot.writeString(self.directoryName.encode('utf-8') if sys.version_info[0] == 2 else self.directoryName)
+            oprot.writeFieldEnd()
+        if self.imageBinaryList is not None:
+            oprot.writeFieldBegin('imageBinaryList', TType.LIST, 2)
+            oprot.writeListBegin(TType.STRUCT, len(self.imageBinaryList))
+            for iter20 in self.imageBinaryList:
+                iter20.write(oprot)
+            oprot.writeListEnd()
+            oprot.writeFieldEnd()
+        oprot.writeFieldStop()
+        oprot.writeStructEnd()
+
+    def validate(self):
+        return
+
+    def __repr__(self):
+        L = ['%s=%r' % (key, value)
+             for key, value in self.__dict__.items()]
+        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        return not (self == other)
+all_structs.append(writeFileToWorker_args)
+writeFileToWorker_args.thrift_spec = (
+    None,  # 0
+    (1, TType.STRING, 'directoryName', 'UTF8', None, ),  # 1
+    (2, TType.LIST, 'imageBinaryList', (TType.STRUCT, [ImageBinary, None], False), None, ),  # 2
+)
+
+
+class writeFileToWorker_result(object):
+    """
+    Attributes:
+     - success
+    """
+
+
+    def __init__(self, success=None,):
+        self.success = success
+
+    def read(self, iprot):
+        if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
+            iprot._fast_decode(self, iprot, [self.__class__, self.thrift_spec])
+            return
+        iprot.readStructBegin()
+        while True:
+            (fname, ftype, fid) = iprot.readFieldBegin()
+            if ftype == TType.STOP:
+                break
+            if fid == 0:
+                if ftype == TType.STRING:
+                    self.success = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
+                else:
+                    iprot.skip(ftype)
+            else:
+                iprot.skip(ftype)
+            iprot.readFieldEnd()
+        iprot.readStructEnd()
+
+    def write(self, oprot):
+        if oprot._fast_encode is not None and self.thrift_spec is not None:
+            oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
+            return
+        oprot.writeStructBegin('writeFileToWorker_result')
+        if self.success is not None:
+            oprot.writeFieldBegin('success', TType.STRING, 0)
+            oprot.writeString(self.success.encode('utf-8') if sys.version_info[0] == 2 else self.success)
+            oprot.writeFieldEnd()
+        oprot.writeFieldStop()
+        oprot.writeStructEnd()
+
+    def validate(self):
+        return
+
+    def __repr__(self):
+        L = ['%s=%r' % (key, value)
+             for key, value in self.__dict__.items()]
+        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        return not (self == other)
+all_structs.append(writeFileToWorker_result)
+writeFileToWorker_result.thrift_spec = (
+    (0, TType.STRING, 'success', 'UTF8', None, ),  # 0
+)
+
+
+class testmethod_args(object):
+    """
+    Attributes:
+     - test
+    """
+
+
+    def __init__(self, test=None,):
+        self.test = test
+
+    def read(self, iprot):
+        if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
+            iprot._fast_decode(self, iprot, [self.__class__, self.thrift_spec])
+            return
+        iprot.readStructBegin()
+        while True:
+            (fname, ftype, fid) = iprot.readFieldBegin()
+            if ftype == TType.STOP:
+                break
+            if fid == 1:
+                if ftype == TType.STRING:
+                    self.test = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
+                else:
+                    iprot.skip(ftype)
+            else:
+                iprot.skip(ftype)
+            iprot.readFieldEnd()
+        iprot.readStructEnd()
+
+    def write(self, oprot):
+        if oprot._fast_encode is not None and self.thrift_spec is not None:
+            oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
+            return
+        oprot.writeStructBegin('testmethod_args')
+        if self.test is not None:
+            oprot.writeFieldBegin('test', TType.STRING, 1)
+            oprot.writeString(self.test.encode('utf-8') if sys.version_info[0] == 2 else self.test)
+            oprot.writeFieldEnd()
+        oprot.writeFieldStop()
+        oprot.writeStructEnd()
+
+    def validate(self):
+        return
+
+    def __repr__(self):
+        L = ['%s=%r' % (key, value)
+             for key, value in self.__dict__.items()]
+        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        return not (self == other)
+all_structs.append(testmethod_args)
+testmethod_args.thrift_spec = (
+    None,  # 0
+    (1, TType.STRING, 'test', 'UTF8', None, ),  # 1
+)
+
+
+class testmethod_result(object):
+    """
+    Attributes:
+     - success
+    """
+
+
+    def __init__(self, success=None,):
+        self.success = success
+
+    def read(self, iprot):
+        if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
+            iprot._fast_decode(self, iprot, [self.__class__, self.thrift_spec])
+            return
+        iprot.readStructBegin()
+        while True:
+            (fname, ftype, fid) = iprot.readFieldBegin()
+            if ftype == TType.STOP:
+                break
+            if fid == 0:
+                if ftype == TType.STRING:
+                    self.success = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
+                else:
+                    iprot.skip(ftype)
+            else:
+                iprot.skip(ftype)
+            iprot.readFieldEnd()
+        iprot.readStructEnd()
+
+    def write(self, oprot):
+        if oprot._fast_encode is not None and self.thrift_spec is not None:
+            oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
+            return
+        oprot.writeStructBegin('testmethod_result')
+        if self.success is not None:
+            oprot.writeFieldBegin('success', TType.STRING, 0)
+            oprot.writeString(self.success.encode('utf-8') if sys.version_info[0] == 2 else self.success)
+            oprot.writeFieldEnd()
+        oprot.writeFieldStop()
+        oprot.writeStructEnd()
+
+    def validate(self):
+        return
+
+    def __repr__(self):
+        L = ['%s=%r' % (key, value)
+             for key, value in self.__dict__.items()]
+        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        return not (self == other)
+all_structs.append(testmethod_result)
+testmethod_result.thrift_spec = (
+    (0, TType.STRING, 'success', 'UTF8', None, ),  # 0
+)
+
+
+class testinputsize_args(object):
+    """
+    Attributes:
+     - inputsize
+    """
+
+
+    def __init__(self, inputsize=None,):
+        self.inputsize = inputsize
+
+    def read(self, iprot):
+        if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
+            iprot._fast_decode(self, iprot, [self.__class__, self.thrift_spec])
+            return
+        iprot.readStructBegin()
+        while True:
+            (fname, ftype, fid) = iprot.readFieldBegin()
+            if ftype == TType.STOP:
+                break
+            if fid == 1:
+                if ftype == TType.STRING:
+                    self.inputsize = iprot.readBinary()
+                else:
+                    iprot.skip(ftype)
+            else:
+                iprot.skip(ftype)
+            iprot.readFieldEnd()
+        iprot.readStructEnd()
+
+    def write(self, oprot):
+        if oprot._fast_encode is not None and self.thrift_spec is not None:
+            oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
+            return
+        oprot.writeStructBegin('testinputsize_args')
+        if self.inputsize is not None:
+            oprot.writeFieldBegin('inputsize', TType.STRING, 1)
+            oprot.writeBinary(self.inputsize)
+            oprot.writeFieldEnd()
+        oprot.writeFieldStop()
+        oprot.writeStructEnd()
+
+    def validate(self):
+        return
+
+    def __repr__(self):
+        L = ['%s=%r' % (key, value)
+             for key, value in self.__dict__.items()]
+        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        return not (self == other)
+all_structs.append(testinputsize_args)
+testinputsize_args.thrift_spec = (
+    None,  # 0
+    (1, TType.STRING, 'inputsize', 'BINARY', None, ),  # 1
+)
+
+
+class testinputsize_result(object):
+    """
+    Attributes:
+     - success
+    """
+
+
+    def __init__(self, success=None,):
+        self.success = success
+
+    def read(self, iprot):
+        if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
+            iprot._fast_decode(self, iprot, [self.__class__, self.thrift_spec])
+            return
+        iprot.readStructBegin()
+        while True:
+            (fname, ftype, fid) = iprot.readFieldBegin()
+            if ftype == TType.STOP:
+                break
+            if fid == 0:
+                if ftype == TType.STRING:
+                    self.success = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
+                else:
+                    iprot.skip(ftype)
+            else:
+                iprot.skip(ftype)
+            iprot.readFieldEnd()
+        iprot.readStructEnd()
+
+    def write(self, oprot):
+        if oprot._fast_encode is not None and self.thrift_spec is not None:
+            oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
+            return
+        oprot.writeStructBegin('testinputsize_result')
+        if self.success is not None:
+            oprot.writeFieldBegin('success', TType.STRING, 0)
+            oprot.writeString(self.success.encode('utf-8') if sys.version_info[0] == 2 else self.success)
+            oprot.writeFieldEnd()
+        oprot.writeFieldStop()
+        oprot.writeStructEnd()
+
+    def validate(self):
+        return
+
+    def __repr__(self):
+        L = ['%s=%r' % (key, value)
+             for key, value in self.__dict__.items()]
+        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        return not (self == other)
+all_structs.append(testinputsize_result)
+testinputsize_result.thrift_spec = (
+    (0, TType.STRING, 'success', 'UTF8', None, ),  # 0
 )
 fix_spec(all_structs)
 del all_structs

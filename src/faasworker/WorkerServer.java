@@ -69,17 +69,18 @@ public class WorkerServer {
 			String workerPortFromConfig = (String) jsonObject.get("worker_port");
 			workerPort = Integer.valueOf(workerPortFromConfig);
 			String resType = (String) jsonObject.get("res_type");
+			String resSubType = (String) jsonObject.get("res_sub_type");
 			String nodeIDFromConfig = (String) jsonObject.get("nodeid");
 			Integer nodeID = Integer.valueOf(nodeIDFromConfig);
-			workerInfo = new WorkerInfo(workerIP, workerPort, nodeID, resType);
-			
-			String masterIP =  (String) jsonObject.get("master_ip");
+			workerInfo = new WorkerInfo(workerIP, workerPort, nodeID, resType, resSubType);
+
+			String masterIP = (String) jsonObject.get("master_ip");
 			String masterPortFromConfig = (String) jsonObject.get("master_port");
 			Integer masterPort = Integer.valueOf(masterPortFromConfig);
 			masterInfo = new WorkerInfo();
 			masterInfo.setIP(masterIP);
 			masterInfo.setPort(masterPort);
-			
+
 		} catch (FileNotFoundException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -91,9 +92,6 @@ public class WorkerServer {
 			e.printStackTrace();
 		}
 
-		
-		
-		
 		System.out.println(workerInfo.toString());
 
 		LOGGER.info("Starting Worker Server IP " + workerIP + " Port " + workerPort);
@@ -106,6 +104,7 @@ public class WorkerServer {
 		registerReqObj.setWorkerNodeLoc(nodeLoc);
 		registerReqObj.setResourceType(workerInfo.getResourceType()); // Workery type is added here
 		registerReqObj.setNodeId(workerInfo.getID());
+		registerReqObj.setSubResourceType(workerInfo.getSubResourceType());
 		RegisterWorkerToMaster.registerMyWorker(registerReqObj);
 
 		workerServiceHandler = new WorkerServiceHandler();
@@ -138,7 +137,7 @@ public class WorkerServer {
 			 */
 			TThreadedSelectorServer.Args serverArgs = new TThreadedSelectorServer.Args(serverTransport);
 			// 20 threads for processing requests
-			serverArgs.executorService(Executors.newFixedThreadPool(1));
+			serverArgs.executorService(Executors.newFixedThreadPool(5));
 			serverArgs.processor(eventProcessor);
 			TThreadedSelectorServer server = new TThreadedSelectorServer(serverArgs);
 			LOGGER.info("Starting the Worker Server.. ");
