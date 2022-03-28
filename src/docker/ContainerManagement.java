@@ -1,6 +1,8 @@
 package docker;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -83,6 +85,34 @@ public class ContainerManagement {
 
 	public void stopContainer() {
 //		ProcessBuilder pb = new 
+	}
+	
+	public static void main(String[] args) {
+		try {
+
+			String command = "/usr/bin/python2.7 video_conversion_function.py 2 512 192.168.0.109 8000 video_3";
+			
+			LOGGER.info("The command is "+command);
+
+			Process p = Runtime.getRuntime().exec(command);
+			try {
+				p.waitFor();
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+
+			BufferedReader stdInput = new BufferedReader(new InputStreamReader(p.getInputStream()));
+			LOGGER.info("Here is the standard output of the command:\n");
+			String s;
+			while ((s = stdInput.readLine()) != null) {
+				System.out.println(s);
+			}
+
+		} catch (IOException e) {
+			System.out.println("exception happened - here's what I know: ");
+			e.printStackTrace();
+			System.exit(-1);
+		}
 	}
 
 }
